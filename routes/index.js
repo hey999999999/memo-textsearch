@@ -24,15 +24,15 @@ var renderIndex = function(q, res, body) {
 /** メモ一覧を表示する。 */
 exports.list = function(req, res) {
 	var q = req.query.q;
+    var promise;
 	if (typeof q === 'undefined' || q === '') {
-		memo.list(function(err, body) {
-			renderIndex(q, res, body);
-		});
+        promise = memo.list();
 	} else {
-		memo.search(q, function(err, body) {
-			renderIndex(q, res, body);
-		});
+        promise = memo.search(q);
 	}
+    promise.then(function(body){
+		renderIndex(q, res, body);
+    });
 };
 
 /** メモ一覧を表示する。(検索キーワード継続) */
