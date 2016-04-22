@@ -27,34 +27,64 @@ var compareDescending = function(a, b) {
 };
 
 /**
- * メモの検索する。
+ * コールバックを受け取る非同期なAPIをPromiseを返却するAPIに変換する。
+ */
+var promisify = function(instance, func) {
+    return function promisified() {
+        // promisified() に渡る引数を配列に変換する
+        var args = [].slice.call(arguments);
+        return new Promise(function(resolve, reject) {
+            args.push(function(err, result) {
+                if (err) {
+                    return reject(err);
+                }
+                // このarguments には、err と result(単体のオブジェクト、または配列)が入っている
+                if (arguments.length <= 2) {
+                    resolve(result);
+                } else {
+                    // arguments の index の1以降を配列として resolve の引数に渡す
+                    resolve([].slice.call(arguments, 1));
+                }
+            });
+            // 上で詰めたコールバック関数も含めて、引数にAPIを適用する
+            func.apply(instance, args);
+        });
+    };
+};
+
+/**
+ * メモの検索する。(Promise版)
  *
  * @see db.search 関数
  *      {@link https://github.com/apache/couchdb-nano#dbsearchdesignname-searchname-params-callback}
  */
-exports.search = function(q, callback) {
-	db.search('memos', 'searchText', {
-		q : q
-	}, function(err, body) {
-		var keys = [];
-		body.rows.forEach(function(row) {
-			keys.push(row['fields']['default'][0]);
-		});
-		keys.sort(compareDescending);
-		db.view('memos', 'list', {
-			keys : keys,
-		}, callback);
-	});
+exports.search = function(q) {
+    var viewForPromise = promisify(db, db.view);
+    var searchForPromise = promisify(db, db.search);
+
+    return searchForPromise('memos', 'searchText', {
+        q: q
+    }).then(function(body){
+	    var keys = [];
+       	body.rows.forEach(function(row) {
+	    	keys.push(row['fields']['default'][0]);
+       	});
+       	keys.sort(compareDescending);
+        return viewForPromise('memos', 'list', {
+            keys: keys
+        });
+    });
 };
 
 /**
- * メモの一覧を取得する。
+ * メモの一覧を取得する。(Promise版)
  *
  * @see db.view 関数
  *      {@link https://github.com/apache/couchdb-nano#dbviewdesignname-viewname-params-callback}
  */
 exports.list = function(callback) {
-	db.view('memos', 'list', VIEW_PARAM, callback);
+    var viewForPromise = promisify(db, db.view);
+    return viewForPromise('memo', 'list', VIEW_PARAM);
 };
 
 /**
