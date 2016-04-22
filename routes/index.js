@@ -22,17 +22,15 @@ var renderIndex = function(q, res, body) {
 };
 
 /** メモ一覧を表示する。 */
-exports.list = function(req, res) {
+exports.list = function*(req, res) {
 	var q = req.query.q;
-    var promise;
+    var body;
 	if (typeof q === 'undefined' || q === '') {
-        promise = memo.list();
+        body = yield memo.list();
 	} else {
-        promise = memo.search(q);
+        body = yield memo.search(q);
 	}
-    promise.then(function(body){
-		renderIndex(q, res, body);
-    });
+    renderIndex(q, res, body);
 };
 
 /** メモ一覧を表示する。(検索キーワード継続) */

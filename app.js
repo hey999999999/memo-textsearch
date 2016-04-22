@@ -25,7 +25,7 @@ app.use(bodyParser.urlencoded({
 app.use(favicon(__dirname + '/public/favicon.ico'));
 
 // ルートを設定する。
-app.get('/', routes.list);
+app.get('/', co.wrap(routes.list));
 app.post('/memos', routes.create);
 app.post('/memos/:_id/:_rev', routes.update);
 app.post('/memos/:_id/:_rev/delete', routes.remove);

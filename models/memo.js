@@ -82,7 +82,7 @@ exports.search = function(q) {
  * @see db.view 関数
  *      {@link https://github.com/apache/couchdb-nano#dbviewdesignname-viewname-params-callback}
  */
-exports.list = function(callback) {
+exports.list = function() {
     var viewForPromise = promisify(db, db.view);
     return viewForPromise('memo', 'list', VIEW_PARAM);
 };
